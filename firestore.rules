@@ -1,0 +1,55 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Only these Google accounts can read or write anything.
+    // Replace with your and your wife's Gmail addresses before deploying.
+    function isAllowed() {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.email in [
+          'you@gmail.com',
+          'wife@gmail.com'
+        ];
+    }
+
+    function isSelf(uid) {
+      return isAllowed() && request.auth.uid == uid;
+    }
+
+    // Public profile (name, photo) so you can see each other's leaderboards.
+    match /users/{uid} {
+      allow read: if isAllowed();
+      allow write: if isSelf(uid);
+    }
+
+    // Shared coffee catalog.
+    match /coffees/{coffeeId} {
+      allow read, delete: if isAllowed();
+      allow create, update: if isAllowed()
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0;
+    }
+
+    // Single doc: machine/current → which coffee is in the machine now.
+    match /machine/{docId} {
+      allow read, write: if isAllowed();
+    }
+
+    // One rating per user per coffee; doc id is `${uid}_${coffeeId}`.
+    match /ratings/{ratingId} {
+      allow read: if isAllowed();
+      allow create, update: if isSelf(request.resource.data.uid)
+        && ratingId == request.auth.uid + '_' + request.resource.data.coffeeId
+        && request.resource.data.rating is int
+        && request.resource.data.rating >= 1
+        && request.resource.data.rating <= 5;
+      allow delete: if isSelf(resource.data.uid);
+    }
+
+    // Each user's personal stack ranking: rankings/{uid} = { order: [coffeeId, ...] }.
+    match /rankings/{uid} {
+      allow read: if isAllowed();
+      allow write: if isSelf(uid);
+    }
+  }
+}
