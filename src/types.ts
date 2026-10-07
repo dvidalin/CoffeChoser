@@ -30,3 +30,10 @@ export interface MachineState {
   setBy?: string;
   setAt?: Timestamp;
 }
+
+export interface Brew {
+  id: string;
+  coffeeId: string;
+  setBy: string;
+  startedAt?: Timestamp;
+}

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { User } from "firebase/auth";
-import { addCoffee, setMachineCoffee, useCoffees, useMachine } from "../data";
+import { addCoffee, formatPeriod, setMachineCoffee, useCoffees, useMachine } from "../data";
 import CoffeeForm from "./CoffeeForm";
 import CoffeeMeta from "./CoffeeMeta";
 import RatingEditor from "./RatingEditor";
@@ -62,6 +62,11 @@ export default function NowBrewing({ user }: { user: User }) {
           <div className="eyebrow">Currently in the machine</div>
           <h2>{current.name}</h2>
           <CoffeeMeta coffee={current} />
+          {machine.setAt && (
+            <div className="muted small">
+              In the machine {formatPeriod({ start: machine.setAt.toDate(), end: null })}
+            </div>
+          )}
         </div>
         <button
           className="btn"

@@ -1,16 +1,25 @@
 import { useState, type FormEvent } from "react";
-import type { Coffee } from "../types";
+import type { CoffeeFields } from "../data";
 
-type NewCoffee = Pick<Coffee, "name" | "roaster" | "origin" | "roast">;
+type NewCoffee = CoffeeFields;
 
 export default function CoffeeForm({
   onSubmit,
   onCancel,
+  initial,
+  submitLabel = "Put it in the machine",
 }: {
   onSubmit: (c: NewCoffee) => Promise<void>;
   onCancel?: () => void;
+  initial?: NewCoffee;
+  submitLabel?: string;
 }) {
-  const [form, setForm] = useState<NewCoffee>({ name: "", roaster: "", origin: "", roast: "" });
+  const [form, setForm] = useState<NewCoffee>({
+    name: initial?.name ?? "",
+    roaster: initial?.roaster ?? "",
+    origin: initial?.origin ?? "",
+    roast: initial?.roast ?? "",
+  });
   const [busy, setBusy] = useState(false);
   const set = (k: keyof NewCoffee) => (e: { target: { value: string } }) =>
     setForm({ ...form, [k]: e.target.value });
@@ -44,7 +53,7 @@ export default function CoffeeForm({
       </select>
       <div className="row">
         <button className="btn primary" disabled={busy || !form.name.trim()}>
-          Put it in the machine
+          {submitLabel}
         </button>
         {onCancel && (
           <button type="button" className="btn" onClick={onCancel}>

@@ -164,3 +164,6 @@ header { display: flex; justify-content: space-between; align-items: center; pad
   .now-header { flex-direction: column; }
   .now-header .stack { flex-direction: row; }
 }
+
+.row.tight { gap: 12px; justify-content: center; }
+.link.danger { color: var(--error); }

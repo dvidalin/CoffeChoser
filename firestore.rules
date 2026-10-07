@@ -12,6 +12,11 @@ service cloud.firestore {
         ];
     }
 
+    function coffeeGoneAfter(coffeeId) {
+      return isAllowed()
+        && !existsAfter(/databases/$(database)/documents/coffees/$(coffeeId));
+    }
+
     function isSelf(uid) {
       return isAllowed() && request.auth.uid == uid;
     }
@@ -43,7 +48,17 @@ service cloud.firestore {
         && request.resource.data.rating is int
         && request.resource.data.rating >= 1
         && request.resource.data.rating <= 5;
-      allow delete: if isSelf(resource.data.uid);
+      // Your own rating, or anyone's when its coffee is deleted in the same batch.
+      allow delete: if isSelf(resource.data.uid) || coffeeGoneAfter(resource.data.coffeeId);
+    }
+
+    // Brew history: one doc each time a coffee goes into the machine.
+    match /brews/{brewId} {
+      allow read: if isAllowed();
+      allow create: if isAllowed()
+        && request.resource.data.setBy == request.auth.uid
+        && exists(/databases/$(database)/documents/coffees/$(request.resource.data.coffeeId));
+      allow delete: if coffeeGoneAfter(resource.data.coffeeId);
     }
 
     // Each user's personal stack ranking: rankings/{uid} = { order: [coffeeId, ...] }.
